@@ -16,8 +16,8 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // ========== WiFi Configuration ==========
-const char* WIFI_SSID = "Antonelli";      // CHANGE THIS
-const char* WIFI_PASSWORD = "maomao1206";   // CHANGE THIS
+const char* WIFI_SSID = "YOURSSID";      // CHANGE THIS
+const char* WIFI_PASSWORD = "YOURPASSWORD";   // CHANGE THIS
 
 // ========== World Capitals ==========
 struct Capital {
