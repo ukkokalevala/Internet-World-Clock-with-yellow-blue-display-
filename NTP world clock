@@ -27,19 +27,19 @@ struct Capital {
 };
 
 const Capital CAPITALS[] = {
-  {"Cape Town", "South Africa", 7200},      // GMT+2
-  {"London", "United Kingdom", 0},          // GMT+0
-  {"Paris", "France", 3600},                // GMT+1
-  {"Berlin", "Germany", 3600},              // GMT+1
-  {"Moscow", "Russia", 10800},              // GMT+3
-  {"Dubai", "UAE", 14400},                  // GMT+4
-  {"Mumbai", "India", 19800},               // GMT+5:30
-  {"Beijing", "China", 28800},              // GMT+8
-  {"Tokyo", "Japan", 32400},                // GMT+9
-  {"Sydney", "Australia", 39600},           // GMT+11
-  {"New York", "USA", -18000},              // GMT-5
-  {"Los Angeles", "USA", -28800},           // GMT-8
-  {"Rio", "Brazil", -10800}                 // GMT-3
+  {"Cape Town", "S. Africa", 7200},       // GMT+2
+  {"London", "UK", 0},                    // GMT+0
+  {"Paris", "France", 3600},              // GMT+1
+  {"Berlin", "Germany", 3600},            // GMT+1
+  {"Moscow", "Russia", 10800},            // GMT+3
+  {"Dubai", "UAE", 14400},                // GMT+4
+  {"Mumbai", "India", 19800},             // GMT+5:30
+  {"Beijing", "China", 28800},            // GMT+8
+  {"Tokyo", "Japan", 32400},              // GMT+9
+  {"Sydney", "Australia", 39600},         // GMT+11
+  {"New York", "USA", -18000},            // GMT-5
+  {"Los Angeles", "USA", -28800},         // GMT-8
+  {"Rio", "Brazil", -10800}               // GMT-3
 };
 
 const int NUM_CAPITALS = sizeof(CAPITALS) / sizeof(CAPITALS[0]);
@@ -61,6 +61,7 @@ String getFormattedTime();
 String getFormattedDate();
 String getDayName();
 void displayClock();
+void drawCentered(const String &text, int y, int textSize);
 
 // ========== Setup ==========
 void setup() {
@@ -112,9 +113,7 @@ void loop() {
     
     // Show capital name briefly
     display.clearDisplay();
-    display.setTextSize(1);
-    display.setCursor(25, 28);
-    display.print(CAPITALS[currentIndex].name);
+    drawCentered(String(CAPITALS[currentIndex].name), 28, 1);
     display.display();
     delay(800);
   }
@@ -183,7 +182,7 @@ String getFormattedDate() {
     return "--- -- ----";
   }
   
-  char buffer[12];
+  char buffer[16];
   sprintf(buffer, "%02d %s %04d", timeinfo.tm_mday, 
           MONTH_NAMES[timeinfo.tm_mon], timeinfo.tm_year + 1900);
   return String(buffer);
@@ -201,11 +200,28 @@ String getDayName() {
   return String(DAY_NAMES[wday]);
 }
 
+// ========== Helper: Draw Centered Text ==========
+// Measures the real pixel width of the text and centers it,
+// clamping to x=0 so the first character is never clipped.
+void drawCentered(const String &text, int y, int textSize) {
+  display.setTextSize(textSize);
+  
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  
+  int x = (SCREEN_WIDTH - w) / 2;
+  if (x < 0) x = 0;
+  
+  display.setCursor(x, y);
+  display.print(text);
+}
+
 // ========== Display Clock ==========
 void displayClock() {
   String timeStr = getFormattedTime();
   String dateStr = getFormattedDate();
-  String dayStr = getDayName();
+  String dayStr  = getDayName();
   
   display.clearDisplay();
   
@@ -213,38 +229,32 @@ void displayClock() {
   display.drawLine(0, 15, 127, 15, SSD1306_WHITE);
   
   // ===== YELLOW AREA (Top) - City and Country =====
-  display.setTextSize(1);
-  
-  // City name
+  // Build location string; if too wide, fall back to city only
   String location = String(CAPITALS[currentIndex].name) + ", " + String(CAPITALS[currentIndex].country);
-  int locWidth = location.length() * 6;
-  int locX = (SCREEN_WIDTH - locWidth) / 2;
-  display.setCursor(locX, 4);
-  display.println(location);
+  
+  display.setTextSize(1);
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(location, 0, 0, &x1, &y1, &w, &h);
+  
+  if (w > SCREEN_WIDTH) {
+    location = String(CAPITALS[currentIndex].name);
+  }
+  
+  drawCentered(location, 4, 1);
   
   // ===== BLUE AREA (Bottom) - Time & Date =====
   // Large time
-  display.setTextSize(2);
-  int timeWidth = timeStr.length() * 12;
-  int timeX = (SCREEN_WIDTH - timeWidth) / 2;
-  display.setCursor(timeX, 22);
-  display.println(timeStr);
+  drawCentered(timeStr, 22, 2);
   
   // Separator line under time
   display.drawLine(20, 40, 107, 40, SSD1306_WHITE);
   
   // Date
-  display.setTextSize(1);
-  int dateWidth = dateStr.length() * 6;
-  int dateX = (SCREEN_WIDTH - dateWidth) / 2;
-  display.setCursor(dateX, 46);
-  display.println(dateStr);
+  drawCentered(dateStr, 46, 1);
   
   // Day
-  int dayWidth = dayStr.length() * 6;
-  int dayX = (SCREEN_WIDTH - dayWidth) / 2;
-  display.setCursor(dayX, 56);
-  display.println(dayStr);
+  drawCentered(dayStr, 56, 1);
   
   display.display();
 }
